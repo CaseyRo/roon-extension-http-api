@@ -37,8 +37,13 @@ roon.init_services({
 });
 
 svc_status.set_status("Extension enabled", false);
-roon.ws_connect({ host: '192.168.86.222', port: 9100, onclose: () => setTimeout(go, 3000) })
-
+if (process.env.server) {
+   roon.ws_connect({ host: process.env.server, port: process.env.port, onclose: () => setTimeout(go, 3000) })
+}
+else
+{
+   roon.start_discovery();
+}
 
 // --------------- APIs ------------------
 
