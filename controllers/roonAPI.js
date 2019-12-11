@@ -37,8 +37,9 @@ roon.init_services({
 });
 
 svc_status.set_status("Extension enabled", false);
+console.log(process.env.server);
 if (process.env.server) {
-   roon.ws_connect({ host: process.env.server, port: process.env.port, onclose: () => setTimeout(go, 3000) })
+   roon.ws_connect({ host: process.env.server, port: process.env.port, onclose: () => setTimeout(go, 3000) });
 }
 else
 {
