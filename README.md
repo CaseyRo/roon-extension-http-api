@@ -142,6 +142,10 @@ The APIs are:
   ```
      http://localhost:3001/roonAPI/listSearch?zoneId=[zoneId]&toSearch=[search string]&list_size=[hits per page]
   ```
+  - getInternetRadios (when one station is returned based on the search criteria, it will start playing that in the defined zone)
+  ```
+    http://localhost:3001/roonAPI/getInternetRadios?toSearch=[search string]&zone=[zoneId]
+  ```
   - goUp (list_size always returns 100)
   ```
      http://localhost:3001/roonAPI/goUp?zoneId=[zoneId]&list_size=[hits per page]
