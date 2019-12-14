@@ -25,4 +25,5 @@ module.exports = function(app) {
     app.get('/roonAPI/getTimers', apis.getTimers);
     app.get('/roonAPI/addTimer', apis.addTimer);
     app.get('/roonAPI/removeTimer', apis.removeTimer);
+    app.get('/roonAPI/getInternetRadios', apis.getInternetRadios);
 };

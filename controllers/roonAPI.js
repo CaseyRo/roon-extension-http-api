@@ -5,8 +5,6 @@ var RoonApiImage     = require("node-roon-api-image");
 var RoonApiBrowse    = require("node-roon-api-browse");
 
 var path = require('path');
-
-
 var core;
 var timeout;
 
@@ -74,6 +72,7 @@ exports.listOutputs = function(req, res) {
         }
     })
 };
+
 exports.getZone = function(req, res) {
   res.send({
     "zone": core.services.RoonApiTransport.zone_by_zone_id(req.query['zoneId'])
@@ -112,7 +111,6 @@ exports.pause = function(req, res) {
   })
 };
 
-
 exports.previous = function(req, res) {
     core.services.RoonApiTransport.control(req.query['zoneId'], 'previous');
 
@@ -136,7 +134,6 @@ exports.next = function(req, res) {
 exports.change_volume = function(req, res) {
   core.services.RoonApiTransport.change_volume(req.query['outputId'], "absolute", req.query['volume']);
 
-
   res.send({
     "status": "success"
   })
@@ -158,7 +155,6 @@ exports.getOriginalImage = function(req, res) {
   core.services.RoonApiImage.get_image(req.query['image_key'], function(cb, contentType, body) {
 
      res.contentType = contentType;
-
      res.writeHead(200, {'Content-Type': 'image/jpeg' });
      res.end(body, 'binary');
   });
@@ -168,7 +164,6 @@ function get_image(image_key, scale, width, height, format, res) {
    core.services.RoonApiImage.get_image(image_key, {scale, width, height, format}, function(cb, contentType, body) {
 
       res.contentType = contentType;
-
       res.writeHead(200, {'Content-Type': 'image/jpeg' });
       res.end(body, 'binary');
    });
@@ -212,7 +207,6 @@ exports.goHome = function(req, res) {
 
 exports.listGoPage = function(req, res) {
    load_browse( req.query['page'], req.query['list_size'], function(myList) {
-
    res.send({
      "list": myList
     })
@@ -276,6 +270,80 @@ exports.removeTimer = function(req, res) {
   })
 };
 
+exports.getInternetRadios = function (req, res) {
+  // refresh_browse('16011ee5c74031bf4598527cc050380ba107',{input: req.query['toSearch']}, 1,20, function (myList) {
+  refreshInternetRadioBrowse({input: req.query['toSearch'], zone: req.query['zone']}, function (myList) {
+    res.send({
+      "list": myList
+    })
+  });
+  // res.send({
+  //   "something": "something"
+  // })
+};
+
+function refreshInternetRadioBrowse (opts, cb) {
+  const zones = [
+    {
+      id: '1601aa43c3fee9120232c41f6fb25827df3b',
+      name: 'bathroom'
+    },
+    {
+      id: '16011ee5c74031bf4598527cc050380ba107',
+      name: "Kees' iMac"
+    },
+    {
+      id: '1601073c2669ef1e5a7799374907deb5aa91',
+      name: 'Marantz'
+    },
+    {
+      id: '1601a1be84aa5e67f7c44a5b72b1eb61cdd7',
+      name: 'Kitchen'
+    }
+  ];
+
+  opts = Object.assign({
+    hierarchy: 'internet_radio'
+  }, opts);
+
+  console.log(zones);
+
+  const selectedZone = zones.findIndex(x => x.name === opts.zone);
+  if (selectedZone !== undefined) opts.zone_or_output_id = zones[selectedZone].id;
+  else return;
+
+  core.services.RoonApiBrowse.browse(opts, (err, r) => {
+    if (err) { console.log(err, r); return; }
+    if (r.action === 'list') {
+      core.services.RoonApiBrowse.load({
+        hierarchy: 'internet_radio'
+      }, (err, r) => {
+        if (err) { console.log(err, r); return; }
+        let items = r.items;
+        // console.log(items);
+
+        const index = items.findIndex(x => x.title === opts.input);
+        // console.log(index + ' ' + opts.input);
+
+        if (index !== undefined) items = items.slice(index, index+1);
+        cb(items);
+        if (items.length === 1) {
+          // console.log(items[0]);
+          // console.log('just one left!');
+          opts = Object.assign({
+            hierarchy: 'internet_radio',
+            item_key: items[0].item_key
+          }, opts);
+
+          console.log(opts);
+          core.services.RoonApiBrowse.browse(opts, (err,r) => {
+            if (err) { console.log(err, r); return; }
+          });
+        }
+      });
+    }
+  });
+}
 
 function refresh_browse(zone_id, opts, page, listPerPage, cb) {
     var items = [];
