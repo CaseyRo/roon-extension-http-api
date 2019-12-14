@@ -272,7 +272,7 @@ exports.removeTimer = function(req, res) {
 
 exports.getInternetRadios = function (req, res) {
   // refresh_browse('16011ee5c74031bf4598527cc050380ba107',{input: req.query['toSearch']}, 1,20, function (myList) {
-  refreshInternetRadioBrowse({input: req.query['toSearch'], zone: req.query['zone']}, function (myList) {
+  refreshInternetRadioBrowse({ input: req.query['toSearch'], zone_or_output_id: req.query['zone']}, function (myList) {
     res.send({
       "list": myList
     })
@@ -306,11 +306,8 @@ function refreshInternetRadioBrowse (opts, cb) {
     hierarchy: 'internet_radio'
   }, opts);
 
-  console.log(zones);
-
-  const selectedZone = zones.findIndex(x => x.name === opts.zone);
-  if (selectedZone !== undefined) opts.zone_or_output_id = zones[selectedZone].id;
-  else return;
+  const selectedZone = zones.findIndex(x => x.name === opts.zone_or_output_id);
+  if (selectedZone !== -1) opts.zone_or_output_id = zones[selectedZone].id;
 
   core.services.RoonApiBrowse.browse(opts, (err, r) => {
     if (err) { console.log(err, r); return; }
@@ -320,24 +317,19 @@ function refreshInternetRadioBrowse (opts, cb) {
       }, (err, r) => {
         if (err) { console.log(err, r); return; }
         let items = r.items;
-        // console.log(items);
 
         const index = items.findIndex(x => x.title === opts.input);
-        // console.log(index + ' ' + opts.input);
 
         if (index !== undefined) items = items.slice(index, index+1);
         cb(items);
         if (items.length === 1) {
-          // console.log(items[0]);
-          // console.log('just one left!');
           opts = Object.assign({
             hierarchy: 'internet_radio',
             item_key: items[0].item_key
           }, opts);
 
-          console.log(opts);
-          core.services.RoonApiBrowse.browse(opts, (err,r) => {
-            if (err) { console.log(err, r); return; }
+          core.services.RoonApiBrowse.browse(opts, (err, r) => {
+            if (err) { console.log(err, r); }
           });
         }
       });
